@@ -24,34 +24,69 @@ def handle(client):
         try:
             message = client.recv(1024)
             msg_decoded = message.decode('utf-8')
-            
-            if msg_decoded.startswith('KICK'):
+
+            # direct Message - must be checked first
+            if msg_decoded.startswith('/dm '):
+                parts = msg_decoded.split(' ', 2)
+                if len(parts) < 3:
+                    client.send("❌ Invalid DM format. Use: /dm <username> <message>".encode('utf-8'))
+                else:
+                    target_name = parts[1].strip()
+                    dm_message = parts[2].strip()
+                    sender_index = clients.index(client)
+                    sender_name = nicknames[sender_index]
+
+                    if target_name in nicknames:
+                        target_index = nicknames.index(target_name)
+                        target_client = clients[target_index]
+                        timestamp = get_timestamp()
+
+                        # send to recipient
+                        formatted = f"{timestamp} [DM] {sender_name} → you: {dm_message}".encode('utf-8')
+                        target_client.send(formatted)
+
+                        # confirmation to sender
+                        confirmation = f"{timestamp} [DM] you → {target_name}: {dm_message}".encode('utf-8')
+                        client.send(confirmation)
+                    else:
+                        client.send(f"❌ User '{target_name}' is not in the chatroom.".encode('utf-8'))
+            # show list of users
+            elif msg_decoded.startswith('/users'):
+                online_list = "\n🟢 Online Users:\n" + "\n".join(f"- {name}" for name in nicknames)
+                client.send(online_list.encode('utf-8'))
+
+            # Admin-only:Kick
+            elif msg_decoded.startswith('KICK'):
                 if nicknames[clients.index(client)] == 'admin':
-                    name_to_kick = msg_decoded[5:]
+                    name_to_kick = msg_decoded[5:].strip()
                     kick_user(name_to_kick)
                 else:
-                    client.send('Command was refused'.encode('utf-8'))
-            
+                    client.send('⚠️ Admin commands can only be executed by the admin.'.encode('utf-8'))
+
+            # Admin-only: Ban
             elif msg_decoded.startswith('BAN'):
                 if nicknames[clients.index(client)] == 'admin':
-                    name_to_ban = msg_decoded[4:]
+                    name_to_ban = msg_decoded[4:].strip()
                     ban_user(name_to_ban)
                 else:
-                    client.send('Command was refused!'.encode('utf-8'))
-            
+                    client.send('⚠️ Admin commands can only be executed by the admin.'.encode('utf-8'))
+
+            # Regular message
             else:
                 timestamp = get_timestamp()
                 timestamped_message = f"{timestamp} {msg_decoded}".encode('utf-8')
                 broadcast(timestamped_message)
                 print(f"{timestamp} {msg_decoded}")
-                
+
         except:
             if client in clients:
                 index = clients.index(client)
-                clients.remove(client)
-                client.close()
                 nickname = nicknames[index]
+
+                clients.remove(client)
                 nicknames.remove(nickname)
+                client.close()
+
                 timestamp = get_timestamp()
 
                 if nickname in kicked_users:
@@ -66,6 +101,7 @@ def handle(client):
                 broadcast(leave_msg)
                 print(leave_msg.decode('utf-8'))
                 break
+
 
 def receive():
     while True:
@@ -124,18 +160,24 @@ def ban_user(name):
         name_index = nicknames.index(name)
         client_to_ban = clients[name_index]
         timestamp = get_timestamp()
+
+        if name == "admin":
+            return
+
         banned_users.add(name)
-        
         client_to_ban.send('You were banned by an admin!'.encode('utf-8'))
+
         with open('bans.txt', 'a') as f:
             f.write(f'{name}\n')
+
         clients.remove(client_to_ban)
-        client_to_ban.close()
         nicknames.remove(name)
+        client_to_ban.close()
 
         ban_msg = f'{timestamp} {name} was banned by an admin!'.encode('utf-8')
         broadcast(ban_msg)
         print(f'{timestamp} {name} was banned!')
+
 
 print("Server is listening..")
 receive()

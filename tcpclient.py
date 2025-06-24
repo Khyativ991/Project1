@@ -56,30 +56,40 @@ def write():
     while True:
         if stop_thread:
             break
-        
-        # Add a clear input prompt
-        user_input = input(f"{nickname}> ") 
-        
-        # Convert emojis before processing
+
+        user_input = input(f"{nickname}> ")
         user_input = convert_emojis(user_input)
-        
-        message = f'{nickname}: {user_input}'
-        
-        if message[len(nickname)+2:].startswith('/'):
+
+        # Handle commands first
+        if user_input.startswith('/'):
+            # ADMIN COMMANDS
             if nickname == 'admin':
-                if message[len(nickname)+2:].startswith('/kick'):
-                    client.send(f'KICK {message[len(nickname)+2+6:]}'.encode('utf-8'))
-                
-                elif message[len(nickname)+2:].startswith('/ban'):
-                    client.send(f'BAN {message[len(nickname)+2+5:]}'.encode('utf-8'))
-                    
-                elif message[len(nickname)+2:].startswith('/emojis'):
+                if user_input.startswith('/kick'):
+                    client.send(f'KICK {user_input[6:]}'.encode('utf-8'))
+
+                elif user_input.startswith('/ban'):
+                    client.send(f'BAN {user_input[5:]}'.encode('utf-8'))
+
+                elif user_input.startswith('/emojis'):
                     print(get_emoji_list())
                     continue
-                    
-                elif message[len(nickname)+2:].startswith('/emoji'):
-                    # /emoji search fire -> shows fire related emojis
-                    parts = message[len(nickname)+2:].split()
+
+                elif user_input.startswith('/help'):
+                    print("""
+                📘 Available Commands:
+                /dm <user> <message>     → Send a private message
+                /users                   → Show online users
+                /emojis                  → View emoji list
+                /emoji <keyword>         → Search for emojis
+
+                Admin Only:
+                /kick <user>             → Kick a user
+                /ban <user>              → Ban a user
+                """)
+                    continue
+
+                elif user_input.startswith('/emoji'):
+                    parts = user_input.split()
                     if len(parts) > 1:
                         keyword = parts[1]
                         results = search_emoji(keyword)
@@ -89,14 +99,47 @@ def write():
                     else:
                         print("Usage: /emoji <keyword>")
                     continue
+
+                elif user_input.startswith('/dm'):
+                    client.send(user_input.encode('utf-8'))
+
+                elif user_input.startswith('/users'):
+                    client.send(user_input.encode('utf-8'))
+                    continue
+
+                else:
+                    print("⚠️ Unknown command.")
             else:
-                if user_input.startswith('/emojis') or user_input.startswith('/emoji'):
+                # NON-ADMIN COMMANDS
+                if user_input.startswith('/dm'):
+                    client.send(user_input.encode('utf-8'))
+                
+                elif user_input.startswith('/help'):
+                    print("""
+                📘 Available Commands:
+                /dm <user> <message>     → Send a private message
+                /users                   → Show online users
+                /emojis                  → View emoji list
+                /emoji <keyword>         → Search for emojis
+                """)
+                    continue
+
+                elif user_input.startswith('/users'):
+                    client.send(user_input.encode('utf-8'))
+                    continue
+
+                elif user_input.startswith('/emojis') or user_input.startswith('/emoji'):
                     print(get_emoji_list())
                     continue
+
                 else:
-                    print("Admin commands can only be executed by the admin")
+                    print("⚠️ Admin commands can only be executed by the admin.")
+
         else:
+            # Regular message with nickname
+            message = f'{nickname}: {user_input}'
             client.send(message.encode('utf-8'))
+
 
 receive_thread = threading.Thread(target=receive)
 receive_thread.start()
