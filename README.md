@@ -8,8 +8,6 @@ Timestamped messages - Every message includes date and time
 Emoji support - Express yourself with emojis in messages
 
 - Chat Commands
-
-/help - Display all available commands
 /users - Show list of online users
 /dm <username> <message> - Send private direct messages
 /kick <username> - (Admin only) Remove user from chat
@@ -22,8 +20,7 @@ Permanent bans - Ban users with persistent ban list
 Admin commands - Full control over chatroom
 
 - Getting Started
-Prerequisites
-
+Prerequisites:
 Python 3.6 or higher
 Required modules: socket, threading, tkinter, datetime
 
@@ -58,11 +55,11 @@ Enter the admin password when prompted
 Gain access to kick and ban commands
 
 - Available Commands
-/help              - Show help menu
 /users             - Display online users
 /dm user message   - Send private message
 /kick username     - (Admin) Kick user
 /ban username      - (Admin) Ban user permanently
+
 - Project Structure
 chatroom/
 │
@@ -83,9 +80,13 @@ Concurrency: Each client handled in separate thread
 
 1. Message Broadcasting: Server broadcasts messages to all connected clients
 2. Private Messaging: Direct message system between users
-3. ser Management: Dynamic user list with join/leave notifications
+3. Server Management: Dynamic user list with join/leave notifications
 4. Admin System: Secure admin authentication and moderation tools
 5. Persistent Bans: Ban list stored in file for permanent bans
+6. Help button for checking available commands
+7. Emoji button which shows a scrollable emoji panel to choose emoji from
+8. Color coded messages: Different commands for admin,system and private messages
+9. Time stamps: each message is followed by a time stamp
 
 - Configuration
 Server Settings
